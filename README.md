@@ -30,6 +30,7 @@ La consigna original esta en:
 - `notebooks/`: notebook principal para trabajar en Google Colab.
 - `figuras/`: graficos exportados para usar en el informe.
 - `informes/`: informe final y borradores.
+- `scripts/`: scripts reproducibles para generar resultados locales.
 - `requirements.txt`: librerias necesarias para ejecutar el analisis.
 
 ## Flujo de trabajo
@@ -63,6 +64,17 @@ La consigna pide usar Google Colab. Para ejecutar el proyecto:
 
 El notebook esta preparado para leer el CSV tanto si se ejecuta desde la raiz del proyecto como si se ejecuta desde la carpeta `notebooks/`.
 
+## Ejecucion local
+
+Para regenerar metricas, figuras e informes auxiliares:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/run_analysis.py
+```
+
 ## Estado actual
 
 - Proyecto Git inicializado.
@@ -71,3 +83,5 @@ El notebook esta preparado para leer el CSV tanto si se ejecuta desde la raiz de
 - Exploracion inicial agregada.
 - Preparacion de datos y modelos definidos en pipelines.
 - Borrador de hallazgos iniciales disponible en `informes/exploracion_inicial.md`.
+- Resultados de modelos generados en `informes/resultados_modelos.md`.
+- Informe final disponible en `informes/informe_final.md`.

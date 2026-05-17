@@ -6,10 +6,4 @@ __pycache__/
 .venv/
 venv/
 
-figuras/*.png
-figuras/*.jpg
-figuras/*.jpeg
-figuras/*.svg
-!figuras/.gitkeep
-
 *.log
