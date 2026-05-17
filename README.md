@@ -2,6 +2,10 @@
 
 Proyecto para el trabajo final de Introduccion a Ciencia de Datos.
 
+Notebook en Colab:
+
+https://colab.research.google.com/github/Camionerou/trabajo_final_icd_2026_project/blob/main/notebooks/trabajo_final_icd_2026_ibm_hr_analytics.ipynb
+
 ## Objetivo
 
 Predecir si un empleado abandona la empresa voluntariamente usando el dataset IBM HR Analytics.
