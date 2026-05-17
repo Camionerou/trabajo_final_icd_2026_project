@@ -46,3 +46,24 @@ Se trabajara con:
 - Random Forest.
 
 La Regresion Logistica sirve como modelo simple e interpretable. Random Forest permite comparar contra un modelo mas flexible.
+
+## Ejecucion en Google Colab
+
+La consigna pide usar Google Colab. Para ejecutar el proyecto:
+
+1. Subir este proyecto a GitHub.
+2. Abrir `notebooks/trabajo_final_icd_2026_ibm_hr_analytics.ipynb` desde Colab.
+3. Asegurarse de que el archivo `IBM HR Analytics Employee_TF.csv` este disponible junto al notebook o en la raiz del proyecto.
+4. Ejecutar las celdas en orden.
+5. Descargar las figuras generadas en `figuras/` para incorporarlas al informe final.
+
+El notebook esta preparado para leer el CSV tanto si se ejecuta desde la raiz del proyecto como si se ejecuta desde la carpeta `notebooks/`.
+
+## Estado actual
+
+- Proyecto Git inicializado.
+- Dataset y consigna incorporados.
+- Notebook base creado.
+- Exploracion inicial agregada.
+- Preparacion de datos y modelos definidos en pipelines.
+- Borrador de hallazgos iniciales disponible en `informes/exploracion_inicial.md`.
