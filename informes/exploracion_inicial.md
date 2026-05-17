@@ -120,6 +120,8 @@ Se trabajara con dos modelos:
 - Regresion Logistica.
 - Random Forest.
 
+Tambien se agregara un baseline simple que predice siempre la clase mayoritaria. No cuenta como modelo principal, pero sirve para comparar si el accuracy de los modelos realmente aporta algo.
+
 La preparacion de datos se hara con pipelines:
 
 - Imputacion de numericas con mediana.

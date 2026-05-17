@@ -1,13 +1,17 @@
 from pathlib import Path
+import warnings
 
 import matplotlib
 
 matplotlib.use("Agg")
 
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="sklearn")
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from sklearn.compose import ColumnTransformer
+from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
@@ -74,6 +78,40 @@ def dataframe_to_markdown(df: pd.DataFrame, float_digits: int = 4) -> str:
     return "\n".join(lines)
 
 
+def build_preprocessor(numeric_features: list[str], categorical_features: list[str]) -> ColumnTransformer:
+    numeric_transformer = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
+
+    categorical_transformer = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("onehot", OneHotEncoder(handle_unknown="ignore")),
+        ]
+    )
+
+    return ColumnTransformer(
+        transformers=[
+            ("num", numeric_transformer, numeric_features),
+            ("cat", categorical_transformer, categorical_features),
+        ]
+    )
+
+
+def clean_feature_name(feature_name: str, categorical_features: list[str]) -> str:
+    feature_name = feature_name.removeprefix("num__").removeprefix("cat__")
+
+    for column in sorted(categorical_features, key=len, reverse=True):
+        prefix = f"{column}_"
+        if feature_name.startswith(prefix):
+            return f"{column} = {feature_name[len(prefix):]}"
+
+    return feature_name
+
+
 def main() -> None:
     sns.set_theme(style="darkgrid")
     plt.rcParams["figure.dpi"] = 120
@@ -132,36 +170,17 @@ def main() -> None:
         stratify=y,
     )
 
-    numeric_transformer = Pipeline(
-        steps=[
-            ("imputer", SimpleImputer(strategy="median")),
-            ("scaler", StandardScaler()),
-        ]
-    )
-
-    categorical_transformer = Pipeline(
-        steps=[
-            ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("onehot", OneHotEncoder(handle_unknown="ignore")),
-        ]
-    )
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", numeric_transformer, numeric_features),
-            ("cat", categorical_transformer, categorical_features),
-        ]
-    )
-
     models = {
+        "Baseline mayoria": DummyClassifier(strategy="most_frequent"),
         "Regresion Logistica": Pipeline(
             steps=[
-                ("preprocessor", preprocessor),
+                ("preprocessor", build_preprocessor(numeric_features, categorical_features)),
                 (
                     "model",
                     LogisticRegression(
                         max_iter=1000,
                         class_weight="balanced",
+                        solver="liblinear",
                         random_state=42,
                     ),
                 ),
@@ -169,7 +188,7 @@ def main() -> None:
         ),
         "Random Forest": Pipeline(
             steps=[
-                ("preprocessor", preprocessor),
+                ("preprocessor", build_preprocessor(numeric_features, categorical_features)),
                 (
                     "model",
                     RandomForestClassifier(
@@ -218,23 +237,27 @@ def main() -> None:
             }
         )
 
-        cm = confusion_matrix(y_test, y_pred)
-        plt.figure(figsize=(5, 4))
-        sns.heatmap(
-            cm,
-            annot=True,
-            fmt="d",
-            cmap="Blues",
-            xticklabels=["No", "Yes"],
-            yticklabels=["No", "Yes"],
-        )
-        plt.title(f"Matriz de confusion - {name}")
-        plt.xlabel("Prediccion")
-        plt.ylabel("Valor real")
-        save_current_figure(f"07_matriz_confusion_{name.lower().replace(' ', '_')}.png")
-        plt.close()
+        if name != "Baseline mayoria":
+            cm = confusion_matrix(y_test, y_pred)
+            plt.figure(figsize=(5, 4))
+            sns.heatmap(
+                cm,
+                annot=True,
+                fmt="d",
+                cmap="Blues",
+                xticklabels=["No", "Yes"],
+                yticklabels=["No", "Yes"],
+            )
+            plt.title(f"Matriz de confusion - {name}")
+            plt.xlabel("Prediccion")
+            plt.ylabel("Valor real")
+            save_current_figure(f"07_matriz_confusion_{name.lower().replace(' ', '_')}.png")
+            plt.close()
 
-    results_df = pd.DataFrame(results).sort_values("Accuracy", ascending=False)
+    results_df = pd.DataFrame(results).sort_values(
+        ["Accuracy", "Recall_Yes"],
+        ascending=[False, False],
+    )
     results_df.to_csv(REPORTS_DIR / "resultados_modelos.csv", index=False)
 
     results_long = results_df.melt(id_vars="Modelo", var_name="Metrica", value_name="Valor")
@@ -255,6 +278,9 @@ def main() -> None:
         pd.DataFrame({"Variable": feature_names, "Importancia": importances})
         .sort_values("Importancia", ascending=False)
         .head(15)
+    )
+    feature_importance["Variable"] = feature_importance["Variable"].map(
+        lambda value: clean_feature_name(value, categorical_features)
     )
     feature_importance.to_csv(REPORTS_DIR / "importancia_variables_random_forest.csv", index=False)
 

@@ -60,6 +60,8 @@ Primeras observaciones:
 - El rol `Sales Representative` aparece con una tasa alta de abandono.
 - Los empleados solteros presentan una tasa de rotacion mayor que otros estados civiles.
 
+Estas relaciones se toman como indicios descriptivos. No alcanzan para decir que una variable causa la renuncia, porque el analisis solo usa los datos disponibles en el archivo.
+
 ## 5. Preparacion de datos
 
 Antes de entrenar los modelos se realizo:
@@ -77,7 +79,11 @@ La estratificacion es importante porque mantiene la proporcion original de emple
 
 ## 6. Modelos utilizados
 
-Se eligieron dos modelos:
+Se eligieron dos modelos principales y un baseline simple de comparacion:
+
+### Baseline de clase mayoritaria
+
+Este modelo predice siempre `Attrition = No`, que es la clase mas frecuente. No se usa como solucion final, sino como referencia para no interpretar mal el accuracy en un dataset desbalanceado.
 
 ### Regresion Logistica
 
@@ -102,11 +108,16 @@ Metricas sobre el conjunto de prueba:
 | Modelo | Train Accuracy | Test Accuracy | Precision Yes | Recall Yes | F1 Yes |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Random Forest | 1.0000 | 0.8401 | 0.5000 | 0.0638 | 0.1132 |
-| Regresion Logistica | 0.7806 | 0.7551 | 0.3529 | 0.6383 | 0.4545 |
+| Baseline mayoria | 0.8384 | 0.8401 | 0.0000 | 0.0000 | 0.0000 |
+| Regresion Logistica | 0.7815 | 0.7551 | 0.3529 | 0.6383 | 0.4545 |
 
 La diferencia entre train y test tambien ayuda a interpretar los resultados. Random Forest llego a 100% de accuracy en entrenamiento, pero bajo a 84.01% en prueba. Esto sugiere que el modelo aprendio muy bien los datos de entrenamiento, aunque no necesariamente generaliza igual de bien para detectar los casos `Yes`.
 
+El baseline tambien obtuvo 84.01% de accuracy, porque la mayor parte de los empleados pertenece a la clase `No`. Esta comparacion muestra por que no conviene elegir el modelo solo por accuracy.
+
 ## 8. Interpretacion de matrices de confusion
+
+El baseline acerto 247 casos de 294, pero no detecto ningun empleado que efectivamente abandono la empresa. Por eso, aunque su accuracy parezca alto, no sirve para el objetivo del trabajo.
 
 La Regresion Logistica acerto 222 casos de 294 en el conjunto de prueba. Detecto 30 de los 47 empleados que efectivamente abandonaron la empresa. Su principal debilidad fue que tambien marco como posibles abandonos a varios empleados que en realidad no se fueron.
 
@@ -114,17 +125,19 @@ Random Forest acerto 247 casos de 294, por eso tuvo mayor accuracy. Sin embargo,
 
 ## 9. Comparacion final
 
-Random Forest obtuvo mejor accuracy general:
+Random Forest y el baseline obtuvieron el mayor accuracy general:
 
 - Random Forest: 84.01%
+- Baseline mayoria: 84.01%
 - Regresion Logistica: 75.51%
 
 Pero Regresion Logistica obtuvo mejor rendimiento para detectar empleados que abandonan la empresa:
 
 - Recall Yes de Regresion Logistica: 63.83%
 - Recall Yes de Random Forest: 6.38%
+- Recall Yes del baseline: 0.00%
 
-En este problema, detectar los casos `Attrition = Yes` es especialmente importante, porque la empresa podria usar el modelo para anticipar posibles renuncias. Por ese motivo, aunque Random Forest tenga mayor exactitud general, la Regresion Logistica resulta mas util para este objetivo.
+En este problema, detectar los casos `Attrition = Yes` es especialmente importante, porque la empresa podria usar el modelo para anticipar posibles renuncias. Por ese motivo, aunque Random Forest tenga mayor exactitud general que Regresion Logistica, la Regresion Logistica resulta mas util para este objetivo.
 
 ## 10. Variables importantes
 
@@ -154,8 +167,18 @@ Estas variables sugieren que la rotacion laboral esta relacionada con factores e
 
 El trabajo permitio entrenar y comparar dos modelos supervisados para predecir rotacion laboral.
 
-Random Forest fue el modelo con mayor accuracy, pero tuvo bajo rendimiento para detectar la clase minoritaria `Yes`. En cambio, Regresion Logistica tuvo menor accuracy general, pero fue mucho mejor para identificar empleados que abandonan la empresa.
+Random Forest fue el modelo con mayor accuracy entre los dos modelos supervisados, pero tuvo bajo rendimiento para detectar la clase minoritaria `Yes`. Ademas, su accuracy fue igual al baseline que predice siempre `No`, lo que confirma que el accuracy por si solo no alcanza para evaluar este problema.
+
+Regresion Logistica tuvo menor accuracy general, pero fue mucho mejor para identificar empleados que abandonan la empresa.
 
 Como el objetivo del problema es anticipar posibles renuncias, se recomienda priorizar la Regresion Logistica en esta primera version del analisis. El modelo no es perfecto, pero ofrece una deteccion mas util de los casos de rotacion.
 
-Como mejora futura, se podria probar ajuste de hiperparametros, validacion cruzada y tecnicas especificas para datasets desbalanceados.
+Limitaciones del analisis:
+
+- Es una primera aproximacion con un dataset ya armado.
+- No se puede afirmar causalidad, solo asociaciones observadas.
+- No se hizo ajuste profundo de hiperparametros.
+- Las metricas pueden cambiar si se usa otra division train/test.
+- Algunas variables faltantes se imputaron, por lo que no reemplazan informacion real.
+
+Como mejora futura, se podria probar validacion cruzada, otros parametros simples y tecnicas especificas para datasets desbalanceados.

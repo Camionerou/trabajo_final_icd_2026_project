@@ -37,11 +37,11 @@ La consigna original esta en:
 
 1. Exploracion inicial del dataset.
 2. Limpieza y preparacion de datos.
-3. Seleccion de variables relevantes.
+3. Revision del desbalance de la variable objetivo.
 4. Entrenamiento de dos modelos supervisados.
-5. Evaluacion con metricas y matrices de confusion.
-6. Comparacion entre modelos.
-7. Informe final en lenguaje claro.
+5. Comparacion contra un baseline de clase mayoritaria.
+6. Evaluacion con metricas y matrices de confusion.
+7. Informe final en lenguaje claro, incluyendo limitaciones.
 
 ## Modelos elegidos
 
@@ -51,6 +51,8 @@ Se trabajara con:
 - Random Forest.
 
 La Regresion Logistica sirve como modelo simple e interpretable. Random Forest permite comparar contra un modelo mas flexible.
+
+Tambien se incluye un baseline que predice siempre `Attrition = No`. Esto ayuda a mostrar por que el accuracy no alcanza cuando la clase `Yes` es minoritaria.
 
 ## Ejecucion en Google Colab
 
@@ -85,3 +87,4 @@ python scripts/run_analysis.py
 - Borrador de hallazgos iniciales disponible en `informes/exploracion_inicial.md`.
 - Resultados de modelos generados en `informes/resultados_modelos.md`.
 - Informe final disponible en `informes/informe_final.md`.
+- Se agrego una seccion de limitaciones para dejar claro que es una primera aproximacion y que no se afirma causalidad.

@@ -92,7 +92,7 @@ Es un modelo basado en muchos arboles de decision. Puede capturar relaciones mas
 
 ## 7. Evaluacion
 
-Los modelos se evaluaran con:
+Los modelos se evaluaron con:
 
 - Accuracy.
 - Precision para la clase `Yes`.
@@ -104,22 +104,23 @@ La matriz de confusion es obligatoria segun la consigna y permite ver cuantos em
 
 ## 8. Comparacion de modelos
 
-Completar esta seccion despues de ejecutar el notebook en Colab.
-
-Tabla a completar:
+Se agrego tambien un baseline que predice siempre la clase mayoritaria (`No`). Esto ayuda a interpretar el accuracy, porque el dataset esta desbalanceado.
 
 | Modelo | Accuracy | Precision Yes | Recall Yes | F1 Yes |
 | --- | ---: | ---: | ---: | ---: |
-| Regresion Logistica | Pendiente | Pendiente | Pendiente | Pendiente |
-| Random Forest | Pendiente | Pendiente | Pendiente | Pendiente |
+| Random Forest | 0.8401 | 0.5000 | 0.0638 | 0.1132 |
+| Baseline mayoria | 0.8401 | 0.0000 | 0.0000 | 0.0000 |
+| Regresion Logistica | 0.7551 | 0.3529 | 0.6383 | 0.4545 |
+
+Random Forest tuvo mejor accuracy que Regresion Logistica, pero casi no detecto casos `Yes`. La Regresion Logistica tuvo menor accuracy general, pero encontro muchos mas empleados que efectivamente abandonaron la empresa.
 
 ## 9. Conclusion
 
-Completar esta seccion despues de ejecutar el notebook.
+El modelo mas util para este objetivo es la Regresion Logistica, porque el problema principal no es solo acertar muchos casos `No`, sino detectar empleados con `Attrition = Yes`.
 
-La conclusion debe responder:
+Limitaciones:
 
-- Que modelo obtuvo mejor rendimiento general.
-- Que modelo detecto mejor los casos de `Attrition = Yes`.
-- Que variables parecen estar mas relacionadas con la rotacion laboral.
-- Que limitaciones tiene el analisis.
+- No se puede afirmar causalidad.
+- Es una primera version del analisis.
+- No se hizo ajuste profundo de parametros.
+- Las metricas pueden cambiar con otra division de datos.
