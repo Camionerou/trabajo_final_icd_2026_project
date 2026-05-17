@@ -2,10 +2,10 @@
 
 Metricas sobre el conjunto de prueba:
 
-| Modelo | Accuracy | Precision_Yes | Recall_Yes | F1_Yes |
-| --- | --- | --- | --- | --- |
-| Random Forest | 0.8401 | 0.5000 | 0.0638 | 0.1132 |
-| Regresion Logistica | 0.7551 | 0.3529 | 0.6383 | 0.4545 |
+| Modelo | Train_Accuracy | Accuracy | Precision_Yes | Recall_Yes | F1_Yes |
+| --- | --- | --- | --- | --- | --- |
+| Random Forest | 1.0000 | 0.8401 | 0.5000 | 0.0638 | 0.1132 |
+| Regresion Logistica | 0.7806 | 0.7551 | 0.3529 | 0.6383 | 0.4545 |
 
 ## Reportes de clasificacion
 

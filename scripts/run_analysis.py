@@ -75,7 +75,8 @@ def dataframe_to_markdown(df: pd.DataFrame, float_digits: int = 4) -> str:
 
 
 def main() -> None:
-    sns.set_theme(style="whitegrid")
+    sns.set_theme(style="darkgrid")
+    plt.rcParams["figure.dpi"] = 120
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     df = pd.read_csv(DATA_PATH, sep=";")
@@ -188,6 +189,7 @@ def main() -> None:
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
 
+        train_acc = accuracy_score(y_train, model.predict(X_train))
         acc = accuracy_score(y_test, y_pred)
         precision_yes = precision_score(y_test, y_pred, zero_division=0)
         recall_yes = recall_score(y_test, y_pred, zero_division=0)
@@ -196,6 +198,7 @@ def main() -> None:
         results.append(
             {
                 "Modelo": name,
+                "Train_Accuracy": train_acc,
                 "Accuracy": acc,
                 "Precision_Yes": precision_yes,
                 "Recall_Yes": recall_yes,

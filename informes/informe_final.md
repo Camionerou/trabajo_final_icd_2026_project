@@ -99,10 +99,12 @@ Los modelos se evaluaron con:
 
 Metricas sobre el conjunto de prueba:
 
-| Modelo | Accuracy | Precision Yes | Recall Yes | F1 Yes |
-| --- | ---: | ---: | ---: | ---: |
-| Random Forest | 0.8401 | 0.5000 | 0.0638 | 0.1132 |
-| Regresion Logistica | 0.7551 | 0.3529 | 0.6383 | 0.4545 |
+| Modelo | Train Accuracy | Test Accuracy | Precision Yes | Recall Yes | F1 Yes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Random Forest | 1.0000 | 0.8401 | 0.5000 | 0.0638 | 0.1132 |
+| Regresion Logistica | 0.7806 | 0.7551 | 0.3529 | 0.6383 | 0.4545 |
+
+La diferencia entre train y test tambien ayuda a interpretar los resultados. Random Forest llego a 100% de accuracy en entrenamiento, pero bajo a 84.01% en prueba. Esto sugiere que el modelo aprendio muy bien los datos de entrenamiento, aunque no necesariamente generaliza igual de bien para detectar los casos `Yes`.
 
 ## 8. Interpretacion de matrices de confusion
 
