@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>analisis.ipynb — Rotación de personal · ICD 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d0a;
+    --bg-glow:#10160f;
+    --panel:#0f1310;
+    --cell:#10140d;
+    --sidebar:#0c0f0b;
+    --out-bg:#f4f5f1;
+    --fg:#cdd6c9;
+    --fg-dim:#7f8c7c;
+    --line:#1f261d;
+    --line-soft:#171c15;
+    --green:#5fe38a;
+    --green-dim:#3f9d63;
+    --amber:#e7b14c;
+    --coral:#f4708f;
+    --mint:#7fd8b0;
+    --cyan:#6fc7d6;
+    --ln:#39432f;
+    --mono:"IBM Plex Mono","SF Mono",monospace;
+    --sans:"IBM Plex Sans",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);color:var(--fg);
+    font-family:var(--mono);font-size:15px;line-height:1.5;
+    overflow:hidden;-webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(1100px 420px at 70% -10%, var(--bg-glow), transparent 70%),
+      linear-gradient(transparent 95%, rgba(95,227,138,.025) 95%) 0 0/100% 28px,
+      linear-gradient(90deg, transparent 95%, rgba(95,227,138,.02) 95%) 0 0/28px 100%;
+  }
+  ::selection{background:rgba(95,227,138,.28);color:#fff;}
+
+  .app{position:fixed;inset:0;z-index:1;display:grid;
+    grid-template-columns:248px 1fr;grid-template-rows:38px 1fr 26px;
+    grid-template-areas:"tab tab" "side main" "side status";}
+  @media(max-width:860px){.app{grid-template-columns:1fr;grid-template-areas:"tab" "main" "status";}}
+
+  .tabbar{grid-area:tab;display:flex;align-items:stretch;background:var(--panel);border-bottom:1px solid var(--line);}
+  .tab{display:flex;align-items:center;gap:9px;padding:0 18px;border-right:1px solid var(--line);
+    font-size:12.5px;color:var(--fg);background:var(--cell);}
+  .tab .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+  .tab .x{color:var(--fg-dim);font-size:11px;}
+  .tabbar .meta{margin-left:auto;display:flex;align-items:center;gap:18px;padding:0 18px;
+    font-size:11px;letter-spacing:.08em;color:var(--fg-dim);text-transform:uppercase;}
+  .tabbar .kernel{display:flex;align-items:center;gap:7px;}
+  .tabbar .kernel i{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;}
+  .navbtns{display:flex;}
+  .navbtns button{background:none;border:none;border-left:1px solid var(--line);color:var(--fg-dim);
+    font-family:var(--mono);font-size:13px;padding:0 14px;cursor:pointer;transition:.15s;}
+  .navbtns button:hover{color:var(--green);background:var(--cell);}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .sidebar{grid-area:side;background:var(--sidebar);border-right:1px solid var(--line);overflow-y:auto;padding:14px 0;}
+  @media(max-width:860px){.sidebar{display:none;}}
+  .side-h{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--fg-dim);padding:0 18px 10px;}
+  .side-h::before{content:"▸ ";color:var(--green-dim);}
+  .outline button{display:flex;gap:10px;align-items:baseline;width:100%;text-align:left;background:none;border:none;
+    color:var(--fg-dim);font-family:var(--mono);font-size:12.5px;padding:7px 18px;cursor:pointer;
+    border-left:2px solid transparent;transition:.13s;}
+  .outline button:hover{background:var(--cell);color:var(--fg);}
+  .outline button.on{color:var(--fg);background:var(--cell);border-left-color:var(--green);}
+  .outline .n{color:var(--amber);font-size:11px;}
+  .outline button.on .n{color:var(--green);}
+
+  .main{grid-area:main;position:relative;overflow:hidden;}
+  .slide{position:absolute;inset:0;overflow-y:auto;padding:22px clamp(20px,4.5vw,64px) 34px;display:none;}
+  .slide.active{display:block;}
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  .prompt{font-family:var(--mono);font-size:12px;color:var(--amber);margin:16px 0 6px;user-select:none;}
+  .prompt .o{color:var(--green-dim);}
+  .prompt.out{color:var(--coral);}
+  .cell-first .prompt{margin-top:0;}
+
+  .code{background:var(--cell);border:1px solid var(--line);border-left:2px solid var(--green-dim);
+    counter-reset:ln;padding:14px 16px 14px 0;overflow-x:auto;font-size:13.5px;line-height:1.7;border-radius:3px;}
+  .code .cl{display:block;white-space:pre;padding-left:3.4em;position:relative;}
+  .code .cl::before{counter-increment:ln;content:counter(ln);position:absolute;left:0;width:2.5em;
+    text-align:right;color:var(--ln);}
+  .c{color:var(--fg-dim);font-style:italic;}
+  .k{color:var(--coral);}
+  .s{color:var(--mint);}
+  .f{color:var(--amber);}
+  .nu{color:var(--cyan);}
+
+  .out{background:rgba(255,255,255,.015);border:1px solid var(--line-soft);border-left:2px solid var(--coral);
+    padding:13px 16px;font-size:13.5px;line-height:1.7;overflow-x:auto;border-radius:3px;}
+  .out .muted{color:var(--fg-dim);}
+  .out .ok{color:var(--green);}
+
+  .bars{display:grid;grid-template-columns:auto auto 1fr auto;gap:6px 12px;align-items:center;font-size:14px;}
+  .bars .cnt{color:var(--cyan);text-align:right;}
+  .bars .track{height:13px;background:rgba(255,255,255,.05);position:relative;}
+  .bars .fill{height:100%;background:linear-gradient(90deg,var(--green-dim),var(--green));}
+  .bars .pct{color:var(--amber);}
+
+  .ttable{font-size:14px;line-height:1.9;white-space:pre;overflow-x:auto;}
+  .ttable .hd{color:var(--fg-dim);}
+  .ttable .win{color:var(--green);font-weight:600;}
+  .ttable .lo{color:var(--fg-dim);}
+
+  .plot{background:var(--out-bg);border-radius:3px;padding:12px 12px 9px;}
+  .plot img{width:100%;display:block;border-radius:2px;}
+  .plot .cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:#5a6358;margin-top:8px;text-transform:uppercase;}
+  .plot .cap b{color:#1f6b3a;}
+  .plotgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:760px){.plotgrid{grid-template-columns:1fr;}}
+  .fig-layout{display:grid;grid-template-columns:minmax(250px,33%) 1fr;gap:26px;align-items:start;}
+  @media(max-width:820px){.fig-layout{grid-template-columns:1fr;}}
+  .plot.big{padding:10px;}
+  .plot.big img{max-height:60vh;width:100%;object-fit:contain;}
+  .fig-main .prompt.out{display:none;}
+  .fig-layout .head, #s1 .head, #s8 .head, #s14 .head{font-size:clamp(22px,2.8vw,32px);}
+  .fig-side .code{font-size:12.5px;}
+  .fig-side .md{font-size:15px;margin-top:14px;}
+  .fig-side .ttable{font-size:13px;line-height:1.85;}
+
+  .md{font-family:var(--sans);font-size:16.5px;line-height:1.62;max-width:70ch;}
+  .md.lead{font-size:19px;}
+  .md p{margin:0 0 13px;}
+  .md strong{color:#eef3ec;font-weight:600;}
+  .md em{color:var(--green);font-style:normal;}
+  .icode{font-family:var(--mono);font-size:.88em;color:var(--mint);background:rgba(127,216,176,.08);padding:1px 5px;border-radius:3px;}
+
+  h1.title{font-family:var(--mono);font-weight:700;font-size:clamp(34px,6.2vw,78px);line-height:1.0;letter-spacing:-.01em;color:#f1f6ee;}
+  h1.title .o{color:var(--green);}
+  h2.head{font-family:var(--mono);font-weight:600;font-size:clamp(24px,3.4vw,40px);color:#eef3ec;letter-spacing:-.005em;}
+  h2.head .hash{color:var(--green-dim);}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--green-dim);margin-bottom:8px;}
+  .sub{font-family:var(--sans);font-size:clamp(17px,1.9vw,22px);color:var(--fg);max-width:54ch;margin-top:16px;}
+  .sub em{color:var(--green);font-style:normal;}
+  .caret{display:inline-block;width:10px;height:1.05em;background:var(--green);vertical-align:-2px;margin-left:3px;animation:blink 1.05s steps(1) infinite;box-shadow:0 0 10px var(--green);}
+  @keyframes blink{50%{opacity:0}}
+
+  #s0 .wrap{min-height:100%;display:flex;flex-direction:column;justify-content:center;}
+  .shell-line{font-size:13.5px;color:var(--fg-dim);}
+  .shell-line .u{color:var(--green);}
+  .shell-line .p{color:var(--cyan);}
+  .boot{color:var(--fg-dim);font-size:12.5px;margin:4px 0 26px;}
+  .boot .ok{color:var(--green);}
+  .metablock{font-size:13.5px;line-height:2.0;margin-top:30px;border-top:1px solid var(--line);padding-top:18px;}
+  .metablock .key{color:var(--green-dim);}
+  .metablock .ph{color:var(--amber);}
+  .tags{margin-top:22px;}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-dim);
+    border:1px solid var(--line);padding:4px 10px;margin:0 7px 7px 0;border-radius:3px;}
+  .tag.on{color:var(--green);border-color:var(--green-dim);}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start;}
+  @media(max-width:860px){.grid2{grid-template-columns:1fr;}}
+  .note{font-family:var(--sans);font-size:15px;border-left:2px solid var(--amber);background:rgba(231,177,76,.05);padding:11px 15px;border-radius:0 3px 3px 0;margin:14px 0;}
+  .note b{color:var(--amber);}
+  .todo{list-style:none;font-size:14px;line-height:1.95;}
+  .todo li::before{content:"# ";color:var(--green-dim);}
+  .todo li{color:var(--fg);}
+
+  .status{grid-area:status;display:flex;align-items:stretch;background:var(--panel);border-top:1px solid var(--line);
+    font-size:11px;letter-spacing:.06em;}
+  .status .seg{display:flex;align-items:center;padding:0 12px;color:var(--fg-dim);}
+  .status .mode{background:var(--green);color:#06140b;font-weight:700;letter-spacing:.12em;}
+  .status .file{color:var(--fg);}
+  .status .spacer{flex:1;}
+  .status .pos{color:var(--amber);}
+  @media(max-width:860px){.status .hideS{display:none;}}
+
+  .slide.active .stream{animation:stream .5s both;}
+  .slide.active .stream:nth-child(2){animation-delay:.05s}
+  .slide.active .stream:nth-child(3){animation-delay:.1s}
+  .slide.active .stream:nth-child(4){animation-delay:.15s}
+  .slide.active .stream:nth-child(5){animation-delay:.2s}
+  .slide.active .stream:nth-child(6){animation-delay:.25s}
+  .slide.active .stream:nth-child(7){animation-delay:.3s}
+  .slide.active .stream:nth-child(8){animation-delay:.35s}
+  @keyframes stream{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+  /* transición direccional al pasar de slide */
+  @keyframes slideInR{from{opacity:0;transform:translateX(46px) scale(.992);filter:blur(2px)}to{opacity:1;transform:none;filter:none}}
+  @keyframes slideInL{from{opacity:0;transform:translateX(-46px) scale(.992);filter:blur(2px)}to{opacity:1;transform:none;filter:none}}
+  .slide.active.nav-fwd{animation:slideInR .46s cubic-bezier(.22,.61,.36,1) both;}
+  .slide.active.nav-back{animation:slideInL .46s cubic-bezier(.22,.61,.36,1) both;}
+
+  @media(prefers-reduced-motion:reduce){.slide.active .stream,.slide.active.nav-fwd,.slide.active.nav-back{animation:none}}
+
+  /* ── animaciones constantes ── */
+  /* portada: las O verdes respiran */
+  @keyframes oGlow{0%,100%{text-shadow:0 0 12px rgba(95,227,138,.4)}50%{text-shadow:0 0 26px rgba(95,227,138,.95),0 0 46px rgba(95,227,138,.35)}}
+  h1.title .o{animation:oGlow 2.8s ease-in-out infinite;}
+  /* dataset: barras con barrido de luz */
+  .bars .fill{position:relative;overflow:hidden;}
+  .bars .fill::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:translateX(-110%);animation:shimmer 2.6s ease-in-out infinite;}
+  @keyframes shimmer{0%{transform:translateX(-110%)}55%,100%{transform:translateX(260%)}}
+
+  /* ── bosque estilo bits (conclusión) ── */
+  .bits-forest{display:grid;grid-template-columns:repeat(12,1fr);gap:0 3px;align-content:end;
+    font-family:var(--mono);font-size:12px;line-height:1.02;color:var(--green-dim);min-height:172px;
+    background:var(--cell);border:1px solid var(--line);border-left:2px solid var(--green-dim);
+    border-radius:3px;padding:14px 12px 10px;}
+  .bits-forest .tree{white-space:pre;text-align:center;opacity:0;transform:translateY(8px) scale(.6);
+    animation:treeGrow 7.5s ease-in-out infinite both;}
+  .bits-forest .tree.lead{color:var(--green);text-shadow:0 0 10px rgba(95,227,138,.7);}
+  @keyframes treeGrow{0%{opacity:0;transform:translateY(8px) scale(.5)}
+    12%{opacity:1;transform:translateY(0) scale(1)}82%{opacity:1;transform:translateY(0) scale(1)}
+    100%{opacity:0;transform:translateY(8px) scale(.5)}}
+  .forest-cap{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--fg-dim);
+    margin-top:9px;text-align:center;}
+  .forest-cap b{color:var(--green);}
+  @media(prefers-reduced-motion:reduce){.bits-forest .tree{opacity:1;transform:none;animation:none}
+    h1.title .o{animation:none}.bars .fill::after{animation:none;display:none}}
+
+  /* ── pantalla completa: escalar todo con el viewport ── */
+  body.fs .app{grid-template-columns:clamp(248px,15vw,360px) 1fr;
+    grid-template-rows:clamp(38px,3.8vh,54px) 1fr clamp(26px,2.8vh,40px);}
+  body.fs .wrap{max-width:min(1680px,86vw);}
+  body.fs .slide{padding:clamp(24px,4.5vh,70px) clamp(28px,5vw,110px);}
+  body.fs .md{font-size:clamp(16.5px,1.45vw,24px);line-height:1.6;max-width:80ch;}
+  body.fs .md.lead{font-size:clamp(19px,1.85vw,29px);}
+  body.fs .sub{font-size:clamp(19px,2.1vw,30px);}
+  body.fs .kick{font-size:clamp(11px,.85vw,15px);}
+  body.fs .code{font-size:clamp(13px,1.05vw,18px);}
+  body.fs .out,body.fs .bars,body.fs .ttable{font-size:clamp(13px,1.05vw,18px);}
+  body.fs .todo,body.fs .note,body.fs .cap{font-size:clamp(14px,1.1vw,19px);}
+  body.fs .plot.big img{max-height:70vh;}
+  body.fs .tab,body.fs .tabbar .meta,body.fs .status{font-size:clamp(12px,.9vw,16px);}
+  body.fs .outline button{font-size:clamp(12.5px,.95vw,16px);padding:9px 18px;}
+  body.fs .navbtns button{font-size:clamp(13px,1vw,18px);padding:0 18px;}
+  body.fs .bits-forest{font-size:clamp(12px,1.05vw,17px);min-height:clamp(172px,30vh,320px);}
+  .hint{position:fixed;right:14px;bottom:34px;z-index:50;font-size:10.5px;letter-spacing:.1em;color:var(--fg-dim);
+    background:var(--panel);border:1px solid var(--line);padding:5px 9px;border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="tabbar">
+    <div class="tab"><span class="dot"></span>analisis.ipynb<span class="x">✕</span></div>
+    <div class="meta">
+      <span class="hideS">~/icd-2026/tp-final</span>
+      <span class="kernel"><i></i>Python 3.9</span>
+      <span class="navbtns">
+        <button id="fs" aria-label="pantalla completa" title="pantalla completa · F">⛶</button>
+        <button id="prev" aria-label="anterior">◂</button>
+        <button id="next" aria-label="siguiente">▸</button>
+      </span>
+    </div>
+  </div>
+
+  <nav class="sidebar">
+    <div class="side-h">outline</div>
+    <div class="outline" id="outline"></div>
+  </nav>
+
+  <main class="main" id="main">
+    <section class="slide active" id="s0"><div class="wrap">
+      <div class="shell-line stream"><span class="u">student@icd-2026</span>:<span class="p">~/tp-final</span>$ jupyter notebook analisis.ipynb</div>
+      <div class="boot stream"><span class="ok">[I]</span> Kernel iniciado · <span class="ok">[I]</span> 1470 registros cargados · matplotlib inline</div>
+      <h1 class="title stream">R<span class="o">O</span>TACIÓN<br>DE PERS<span class="o">O</span>NAL<span class="caret"></span></h1>
+      <p class="sub stream">Predecir qué empleados <em>dejan la empresa</em> con un modelo de clasificación, sobre el dataset IBM&nbsp;HR&nbsp;Analytics.</p>
+      <div class="metablock stream">
+        <div><span class="key">  integrantes</span> = <span class="s">"Pedro Luis Fuentes Prieto · Enzo Saldivia"</span></div>
+        <div><span class="key">      materia</span> = <span class="s">"Introducción a Ciencia de Datos"</span></div>
+        <div><span class="key">        fecha</span> = <span class="s">"Junio 2026"</span></div>
+        <div><span class="key">      dataset</span> = <span class="s">"IBM HR Analytics"</span>  <span class="c"># 1470 × 35</span></div>
+      </div>
+      <div class="tags stream">
+        <span class="tag on">clasificación supervisada</span><span class="tag">scikit-learn</span><span class="tag">pandas · seaborn</span>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s1"><div class="wrap">
+      <div class="stream"><div class="kick">cell 01 · markdown + code</div><h2 class="head"><span class="hash">## </span>El problema y los datos</h2></div>
+      <p class="md lead stream" style="max-width:90ch">Queremos anticipar si un empleado va a renunciar (columna <span class="icode">Attrition</span>: <strong>Yes</strong> se fue / <strong>No</strong> se quedó). Como hay histórico <em>con la respuesta</em>, es <strong>clasificación supervisada</strong>: comparamos un modelo simple (Regresión Logística) contra uno más potente (Random Forest).</p>
+      <div class="grid2">
+        <div class="stream">
+          <div class="prompt cell-first"><span class="o">In </span>[2]:</div>
+          <div class="code"><span class="cl"><span class="c"># el CSV usa ; como separador</span></span><span class="cl">df = pd.<span class="f">read_csv</span>(<span class="s">"...Employee_TF.csv"</span>, sep=<span class="s">";"</span>)</span><span class="cl">df.shape  <span class="c"># (1470, 35)</span></span><span class="cl">df[<span class="s">"Attrition"</span>].<span class="f">value_counts</span>()</span></div>
+          <div class="prompt out">Out[2]:</div>
+          <div class="out"><div class="bars">
+            <span class="lbl">No</span><span class="cnt">1233</span><span class="track"><span class="fill" style="width:83.9%"></span></span><span class="pct">83.9%</span>
+            <span class="lbl">Yes</span><span class="cnt">237</span><span class="track"><span class="fill" style="width:16.1%"></span></span><span class="pct">16.1%</span>
+          </div></div>
+        </div>
+        <div class="stream">
+          <p class="md">1470 empleados y 35 columnas (edad, sueldo, puesto, antigüedad, satisfacción…). Tres tenían datos faltantes:</p>
+          <div class="out"><div class="ttable"><span class="hd">df.isnull().sum()</span>
+DistanceFromHome   <span class="ok">147</span>
+DailyRate           <span class="ok">73</span>
+Age                 <span class="ok">44</span></div></div>
+          <div class="note"><b># dato clave</b> — está <strong>desbalanceado</strong>: predecir siempre <em>No</em> ya da ~84%. Lo tenemos en cuenta al evaluar.</div>
+        </div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s3"><div class="wrap">
+      <div class="stream"><div class="kick">cell 03 · code + figura</div><h2 class="head"><span class="hash">## </span>Distribución de Attrition</h2></div>
+      <div class="fig-layout">
+        <div class="fig-side stream">
+          <div class="prompt cell-first"><span class="o">In </span>[3]:</div>
+          <div class="code"><span class="cl">sns.<span class="f">countplot</span>(x=<span class="s">"Attrition"</span>, data=df)</span><span class="cl">plt.<span class="f">title</span>(<span class="s">"Cantidad segun Attrition"</span>)</span></div>
+          <p class="md"><strong>Qué muestra:</strong> La gran mayoría se queda (<em>No</em>) y solo el 16% se va. El dataset está <em>desbalanceado</em>: por eso después no miramos solo el accuracy.</p>
+        </div>
+        <div class="fig-main stream">
+          <div class="prompt out">Out[3]: &lt;Figure&gt;</div>
+          <div class="plot big"><img src="figuras/distribucion_attrition.png" alt="Distribución de Attrition"><div class="cap">fig.01 · distribución de la variable objetivo</div></div>
+        </div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s4"><div class="wrap">
+      <div class="stream"><div class="kick">cell 04 · code + figura</div><h2 class="head"><span class="hash">## </span>Salario y rotación</h2></div>
+      <div class="fig-layout">
+        <div class="fig-side stream">
+          <div class="prompt cell-first"><span class="o">In </span>[4]:</div>
+          <div class="code"><span class="cl"><span class="c"># boxplot obligatorio</span></span><span class="cl">sns.<span class="f">boxplot</span>(x=<span class="s">"Attrition"</span>,</span><span class="cl">            y=<span class="s">"MonthlyIncome"</span>, data=df)</span></div>
+          <p class="md" style="margin-top:14px"><strong>Lectura:</strong> quienes se van (<em>Yes</em>) tienen sueldos más bajos: su caja queda por debajo.</p>
+        </div>
+        <div class="fig-main stream"><div class="plot big"><img src="figuras/boxplot_salario.png" alt="Boxplot del salario"><div class="cap">fig.02 · boxplot obligatorio</div></div></div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s5"><div class="wrap">
+      <div class="stream"><div class="kick">cell 05 · code + figura</div><h2 class="head"><span class="hash">## </span>Edad y rotación</h2></div>
+      <div class="fig-layout">
+        <div class="fig-side stream">
+          <div class="prompt cell-first"><span class="o">In </span>[5]:</div>
+          <div class="code"><span class="cl"><span class="c"># violín obligatorio</span></span><span class="cl">sns.<span class="f">violinplot</span>(x=<span class="s">"Attrition"</span>,</span><span class="cl">               y=<span class="s">"Age"</span>, data=df)</span></div>
+          <p class="md" style="margin-top:14px">El violín muestra la <strong>forma</strong> de la distribución en cada grupo.</p>
+          <p class="md"><strong>Lectura:</strong> quienes se van se concentran en edades más jóvenes, cerca de los 30.</p>
+        </div>
+        <div class="fig-main stream"><div class="plot big"><img src="figuras/violin_edad.png" alt="Violín de edad"><div class="cap">fig.03 · violín obligatorio</div></div></div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s6"><div class="wrap">
+      <div class="stream"><div class="kick">cell 06 · code + figura</div><h2 class="head"><span class="hash">## </span>Horas extra</h2></div>
+      <div class="fig-layout">
+        <div class="fig-side stream">
+          <div class="prompt cell-first"><span class="o">In </span>[6]:</div>
+          <div class="code"><span class="cl">sns.<span class="f">countplot</span>(x=<span class="s">"OverTime"</span>,</span><span class="cl">              hue=<span class="s">"Attrition"</span>, data=df)</span></div>
+          <p class="md" style="margin-top:14px">Los empleados que hacen <span class="icode">OverTime</span> se van bastante más seguido.</p>
+          <div class="note"><b># ojo</b> — relación observada, no causalidad demostrada.</div>
+        </div>
+        <div class="fig-main stream"><div class="plot big"><img src="figuras/rotacion_overtime.png" alt="Rotación según horas extra"><div class="cap">fig.04 · attrition según overtime</div></div></div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s7"><div class="wrap">
+      <div class="stream"><div class="kick">cell 07 · code + figura</div><h2 class="head"><span class="hash">## </span>Correlaciones</h2></div>
+      <div class="fig-layout">
+        <div class="fig-side stream">
+          <div class="prompt cell-first"><span class="o">In </span>[7]:</div>
+          <div class="code"><span class="cl">corr = df.<span class="f">select_dtypes</span>(include=<span class="s">"number"</span>).<span class="f">corr</span>()</span><span class="cl">sns.<span class="f">heatmap</span>(corr, cmap=<span class="s">"coolwarm"</span>, center=<span class="nu">0</span>)</span></div>
+          <p class="md" style="margin-top:14px">Ayuda a ver qué variables numéricas se mueven juntas. Antigüedad, experiencia y sueldo aparecen relacionados.</p>
+          <p class="md">Igual, <strong>correlación no es causalidad</strong>.</p>
+        </div>
+        <div class="fig-main stream"><div class="plot big"><img src="figuras/heatmap_correlaciones.png" alt="Heatmap de correlaciones"><div class="cap">fig.05 · heatmap de correlaciones</div></div></div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s8"><div class="wrap">
+      <div class="stream"><div class="kick">cell 08 · code + modelos</div><h2 class="head"><span class="hash">## </span>Preparación y modelos</h2></div>
+      <div class="grid2">
+        <div class="stream">
+          <ul class="todo" style="margin-bottom:14px">
+            <li>0 duplicados, edades 18–60, Attrition OK</li>
+            <li>eliminar columnas constantes y legajo</li>
+            <li>Attrition → 0/1 · one-hot (drop_first)</li>
+            <li>split 80/20 con stratify</li>
+          </ul>
+          <div class="prompt cell-first"><span class="o">In </span>[8]:</div>
+          <div class="code"><span class="cl">medianas = X_train.<span class="f">median</span>()</span><span class="cl">X_train = X_train.<span class="f">fillna</span>(medianas)</span><span class="cl">X_test  = X_test.<span class="f">fillna</span>(medianas)</span><span class="cl">X_train = scaler.<span class="f">fit_transform</span>(X_train)</span></div>
+          <div class="note"><b># decisión clave</b> — la mediana se calcula solo con <em>train</em> para evitar fuga de información.</div>
+        </div>
+        <div class="stream">
+          <div class="prompt cell-first"><span class="o">In </span>[9]:</div>
+          <div class="code"><span class="cl">log_reg = <span class="f">LogisticRegression</span>(max_iter=<span class="nu">1000</span>)</span><span class="cl">log_reg.<span class="f">fit</span>(X_train, y_train)</span><span class="cl"></span><span class="cl">rf = <span class="f">RandomForestClassifier</span>(random_state=<span class="nu">42</span>)</span><span class="cl">rf.<span class="f">fit</span>(X_train, y_train)</span></div>
+          <p class="md" style="margin-top:12px"><strong>LogReg:</strong> simple e interpretable. <strong>Random Forest:</strong> muchos árboles que votan, capta relaciones más complejas.</p>
+          <div class="out"><div class="ttable"><span class="hd">datos después de preparar</span>
+X_train   <span class="ok">1176 filas</span>
+X_test     <span class="ok">294 filas</span>
+features   <span class="ok">44 columnas</span></div></div>
+        </div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s10"><div class="wrap">
+      <div class="stream"><div class="kick">cell 10 · code + figura</div><h2 class="head"><span class="hash">## </span>Comparación de modelos</h2></div>
+      <div class="fig-layout">
+        <div class="fig-side stream">
+          <div class="prompt cell-first"><span class="o">In </span>[10]:</div>
+          <div class="code"><span class="cl">resultados.<span class="f">plot</span>(kind=<span class="s">"bar"</span>)</span><span class="cl">plt.<span class="f">ylim</span>(<span class="nu">0</span>, <span class="nu">1</span>)</span></div>
+          <div class="out" style="margin-top:12px"><div class="ttable"><span class="hd">Métrica              LogReg   Forest</span>
+Accuracy            <span class="win">0.8605</span>   0.8401
+Precision Yes       <span class="win">0.6154</span>   0.5000
+Recall Yes          <span class="win">0.3404</span>   0.1064
+F1 Yes              <span class="win">0.4384</span>   0.1754</div></div>
+          <p class="md" style="margin-top:14px">La métrica más importante es el <strong>recall de Yes</strong>: de los que realmente se fueron, cuántos detectamos.</p>
+        </div>
+        <div class="fig-main stream"><div class="plot big"><img src="figuras/comparacion_modelos.png" alt="Comparación de modelos"><div class="cap">fig.06 · métricas comparadas</div></div></div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s11"><div class="wrap">
+      <div class="stream"><div class="kick">cell 11 · code + figuras</div><h2 class="head"><span class="hash">## </span>Matrices de confusión</h2></div>
+      <div class="fig-layout">
+        <div class="fig-side stream">
+          <div class="prompt cell-first"><span class="o">In </span>[11]:</div>
+          <div class="code"><span class="cl"><span class="c"># misma celda para cada modelo</span></span><span class="cl">cm = <span class="f">confusion_matrix</span>(y_test, y_pred)</span><span class="cl">sns.<span class="f">heatmap</span>(cm, annot=<span class="k">True</span>, fmt=<span class="s">"d"</span>,</span><span class="cl">            cmap=<span class="s">"Blues"</span>)</span></div>
+          <div class="out" style="margin-top:14px"><div class="ttable"><span class="hd"># de los 47 que se fueron, detectó:</span>
+LogReg        <span class="win">16 / 47</span>
+RandomForest  <span class="lo">5 / 47</span></div></div>
+          <p class="md" style="margin-top:12px"><strong>Lectura:</strong> el bosque acierta más casos totales, pero casi siempre predice <em>No</em>. La logística detecta más renuncias reales.</p>
+        </div>
+        <div class="fig-main stream"><div class="plotgrid">
+          <div class="plot"><img src="figuras/matriz_confusion_logistica.png" alt="Matriz de confusión logística"><div class="cap">fig.07 · regresión logística · 253/294</div></div>
+          <div class="plot"><img src="figuras/matriz_confusion_random_forest.png" alt="Matriz de confusión Random Forest"><div class="cap">fig.08 · random forest · 247/294</div></div>
+        </div></div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s13"><div class="wrap">
+      <div class="stream"><div class="kick">cell 12 · code + figura</div><h2 class="head"><span class="hash">## </span>Variables importantes</h2></div>
+      <div class="fig-layout">
+        <div class="fig-side stream">
+          <div class="prompt cell-first"><span class="o">In </span>[12]:</div>
+          <div class="code"><span class="cl">imp = pd.<span class="f">Series</span>(rf.feature_importances_,</span><span class="cl">               index=columnas)</span><span class="cl">imp.<span class="f">sort_values</span>().<span class="f">head</span>(<span class="nu">10</span>).<span class="f">plot</span>(kind=<span class="s">"barh"</span>)</span></div>
+          <p class="md" style="margin-top:14px">Qué variables usa más el bosque para separar casos: sueldo, edad, años trabajados, distancia y horas extra.</p>
+          <div class="note"><b># aclaración</b> — importancia no significa causalidad.</div>
+        </div>
+        <div class="fig-main stream"><div class="plot big"><img src="figuras/importancia_variables.png" alt="Variables más importantes"><div class="cap">fig.09 · top 10 de importancia (random forest)</div></div></div>
+      </div>
+    </div></section>
+
+    <section class="slide" id="s14"><div class="wrap">
+      <div class="stream"><div class="kick">cell 13 · markdown · fin</div><h2 class="head"><span class="hash">## </span>Conclusión</h2></div>
+      <p class="md lead stream">La <em>Regresión Logística</em> fue mejor en todas las métricas, y sobre todo en el <strong>recall</strong> de la clase Yes, que es la que importa para anticipar renuncias.</p>
+      <div class="bits-forest stream" id="forest" aria-hidden="true"></div>
+      <div class="forest-cap stream">1 árbol de decisión &nbsp;→&nbsp; N árboles que votan&nbsp;=&nbsp;<b>Random&nbsp;Forest</b></div>
+      <div class="grid2" style="margin-top:18px">
+        <div class="stream">
+          <div class="out" style="margin-bottom:12px"><div class="ttable"><span class="hd"># de los 47 que se fueron, detectó:</span>
+LogReg        <span class="win">16 / 47</span>
+RandomForest  <span class="lo">5 / 47</span></div></div>
+          <p class="md">Ningún modelo los detecta perfecto: hay pocos casos <em>Yes</em> (desbalance). Sirve como <strong>primera aproximación</strong> para señalar empleados en riesgo.</p>
+        </div>
+        <div class="stream">
+          <p class="md" style="margin-bottom:8px"><strong>Hecho con criterio:</strong></p>
+          <ul class="todo">
+            <li>validé los datos: 0 duplicados, edades 18–60, categorías OK</li>
+            <li>imputé con la mediana del <em>train</em>, sin filtrar el test</li>
+            <li>split estratificado + random_state fijo → reproducible</li>
+          </ul>
+        </div>
+      </div>
+    </div></section>
+  </main>
+
+  <div class="status">
+    <span class="seg mode">NORMAL</span>
+    <span class="seg file">analisis.ipynb</span>
+    <span class="seg hideS">clasificación · sklearn</span>
+    <span class="spacer"></span>
+    <span class="seg hideS">utf-8</span>
+    <span class="seg hideS">py 3.9</span>
+    <span class="seg pos">CELL <span id="pos">01</span>/12</span>
+  </div>
+</div>
+
+<div class="hint" id="hint">← → para navegar</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const titles = ['inicio','problema y datos','distribución','salario','edad','horas extra','correlaciones','preparación y modelos','comparación','confusión','importancia','conclusión'];
+  let cur = 0;
+  const pos = document.getElementById('pos');
+  const outline = document.getElementById('outline');
+
+  titles.forEach((t,i)=>{
+    const b=document.createElement('button');
+    b.innerHTML=`<span class="n">[${String(i).padStart(2,'0')}]</span><span>${t}</span>`;
+    b.onclick=()=>go(i);
+    outline.appendChild(b);
+  });
+  const obtns = Array.from(outline.children);
+
+  function go(i){
+    i=Math.max(0,Math.min(slides.length-1,i));
+    const dir = i<cur ? 'nav-back' : 'nav-fwd';
+    slides[cur].classList.remove('active','nav-fwd','nav-back');
+    obtns[cur].classList.remove('on');
+    cur=i;
+    const s=slides[cur];
+    s.classList.remove('nav-fwd','nav-back');
+    void s.offsetWidth;               // reflow → reinicia la animación
+    s.classList.add('active',dir);
+    s.scrollTop=0;
+    obtns[cur].classList.add('on');
+    obtns[cur].scrollIntoView({block:'nearest'});
+    pos.textContent=String(i+1).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(cur+1);
+  document.getElementById('prev').onclick=()=>go(cur-1);
+
+  // modo pantalla completa
+  function toggleFS(){
+    if(!document.fullscreenElement){(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen||(()=>{})).call(document.documentElement);}
+    else{(document.exitFullscreen||document.webkitExitFullscreen||(()=>{})).call(document);}
+  }
+  document.getElementById('fs').onclick=toggleFS;
+  ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>
+    document.addEventListener(ev,()=>{
+      const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
+      document.body.classList.toggle('fs',on);
+    }));
+
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();go(cur+1);}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+    else if(e.key==='Home'){go(0);} else if(e.key==='End'){go(slides.length-1);}
+    else if(e.key==='f'||e.key==='F'){e.preventDefault();toggleFS();}
+  });
+
+  // bosque estilo bits: 1 árbol → N árboles (Random Forest)
+  const forest=document.getElementById('forest');
+  if(forest){
+    const TREE=' /\\\n/__\\\n ||';
+    for(let i=0;i<60;i++){
+      const t=document.createElement('span');
+      t.className='tree'+(i===0?' lead':'');
+      t.textContent=TREE;
+      const dur=(6+Math.random()*3.5);                       // duración 6–9.5s, distinta por árbol
+      t.style.animationDuration=dur.toFixed(2)+'s';
+      t.style.animationDelay=(-Math.random()*dur).toFixed(2)+'s'; // fase aleatoria (negativa: arranca a mitad)
+      forest.appendChild(t);
+    }
+  }
+  let tx=0;
+  const main=document.getElementById('main');
+  main.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+  main.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>60){dx<0?go(cur+1):go(cur-1);}},{passive:true});
+
+  go(0);
+  setTimeout(()=>{const h=document.getElementById('hint');h.style.transition='opacity .6s';h.style.opacity='0';},4200);
+</script>
+</body>
+</html>
