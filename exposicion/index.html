@@ -78,6 +78,9 @@
   .outline button.on .n{color:var(--green);}
 
   .main{grid-area:main;position:relative;overflow:hidden;}
+  .progress{position:absolute;left:0;top:0;height:2px;width:0;z-index:6;
+    background:linear-gradient(90deg,var(--green-dim),var(--green));
+    box-shadow:0 0 10px var(--green);transition:width .46s cubic-bezier(.22,.61,.36,1);}
   .slide{position:absolute;inset:0;overflow-y:auto;padding:22px clamp(20px,4.5vw,64px) 34px;display:none;}
   .slide.active{display:block;}
   .wrap{max-width:1080px;margin:0 auto;}
@@ -89,7 +92,8 @@
 
   .code{background:var(--cell);border:1px solid var(--line);border-left:2px solid var(--green-dim);
     counter-reset:ln;padding:14px 16px 14px 0;overflow-x:auto;font-size:13.5px;line-height:1.7;border-radius:3px;}
-  .code .cl{display:block;white-space:pre;padding-left:3.4em;position:relative;}
+  /* pre-wrap + sangría colgante: las líneas largas se acomodan en vez de cortarse */
+  .code .cl{display:block;white-space:pre-wrap;overflow-wrap:break-word;padding-left:3.4em;text-indent:0;position:relative;}
   .code .cl::before{counter-increment:ln;content:counter(ln);position:absolute;left:0;width:2.5em;
     text-align:right;color:var(--ln);}
   .c{color:var(--fg-dim);font-style:italic;}
@@ -148,7 +152,7 @@
   @keyframes blink{50%{opacity:0}}
 
   #s0 .wrap{min-height:100%;display:flex;flex-direction:column;justify-content:center;}
-  .shell-line{font-size:13.5px;color:var(--fg-dim);}
+  .shell-line{font-size:13.5px;color:var(--fg-dim);margin-bottom:26px;}
   .shell-line .u{color:var(--green);}
   .shell-line .p{color:var(--cyan);}
   .boot{color:var(--fg-dim);font-size:12.5px;margin:4px 0 26px;}
@@ -160,6 +164,11 @@
   .tag{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-dim);
     border:1px solid var(--line);padding:4px 10px;margin:0 7px 7px 0;border-radius:3px;}
   .tag.on{color:var(--green);border-color:var(--green-dim);}
+
+  /* portada: texto un poco más grande */
+  #s0 .sub{font-size:clamp(18px,2.3vw,26px);max-width:58ch;}
+  #s0 .metablock{font-size:14.5px;line-height:2.15;}
+  body.fs #s0 .metablock{font-size:clamp(15px,1.2vw,21px);}
 
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start;}
   @media(max-width:860px){.grid2{grid-template-columns:1fr;}}
@@ -176,6 +185,9 @@
   .status .file{color:var(--fg);}
   .status .spacer{flex:1;}
   .status .pos{color:var(--amber);}
+  .status .speaker{display:flex;align-items:center;gap:6px;color:var(--fg-dim);text-transform:lowercase;}
+  .status .speaker i{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);transition:.2s;}
+  .status .speaker.enzo i{background:var(--coral);box-shadow:0 0 6px var(--coral);}
   @media(max-width:860px){.status .hideS{display:none;}}
 
   .slide.active .stream{animation:stream .5s both;}
@@ -224,6 +236,79 @@
   @media(prefers-reduced-motion:reduce){.bits-forest .tree{opacity:1;transform:none;animation:none}
     h1.title .o{animation:none}.bars .fill::after{animation:none;display:none}}
 
+  /* ── ambiente: motas de datos flotando (mismo espíritu del bosque) ── */
+  .dust{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .dust span{position:absolute;bottom:-14px;width:3px;height:3px;border-radius:50%;
+    background:var(--green-dim);box-shadow:0 0 6px rgba(95,227,138,.5);opacity:0;
+    animation:rise linear infinite;}
+  @keyframes rise{
+    0%{opacity:0;transform:translateY(0) translateX(0)}
+    12%{opacity:.55}
+    50%{transform:translateY(-52vh) translateX(14px)}
+    88%{opacity:.55}
+    100%{opacity:0;transform:translateY(-104vh) translateX(0)}}
+
+  /* ── figuras: barrido tipo escáner, solo en la slide activa (no gasta en las ocultas) ── */
+  .plot{position:relative;overflow:hidden;}
+  .slide.active .plot::after{content:"";position:absolute;left:0;right:0;top:0;height:30%;pointer-events:none;
+    background:linear-gradient(180deg,transparent,rgba(31,107,58,.12),transparent);
+    transform:translateY(-160%);animation:scan 7.5s ease-in-out infinite;}
+  .slide.active .plotgrid .plot:nth-child(2)::after{animation-delay:3.75s;}
+  @keyframes scan{0%{transform:translateY(-160%)}60%,100%{transform:translateY(420%)}}
+  /* el borde de las figuras grandes respira suave */
+  .slide.active .plot.big{animation:figBreath 5.5s ease-in-out infinite;}
+  @keyframes figBreath{0%,100%{box-shadow:0 0 0 1px rgba(95,227,138,0)}
+    50%{box-shadow:0 0 22px -6px rgba(95,227,138,.4)}}
+
+  /* ── barras: crecen desde 0 al entrar a la slide ── */
+  .bars .fill{transform-origin:left center;}
+  .slide.active .bars .fill{animation:barGrow .95s cubic-bezier(.2,.8,.2,1) both;}
+  @keyframes barGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+  /* ── notas clave: latido tenue en el borde ámbar para guiar la vista ── */
+  .note{position:relative;}
+  .note::before{content:"";position:absolute;left:-2px;top:0;bottom:0;width:2px;background:var(--amber);
+    animation:notePulse 3.4s ease-in-out infinite;}
+  @keyframes notePulse{0%,100%{box-shadow:0 0 0 rgba(231,177,76,0)}
+    50%{box-shadow:0 0 12px rgba(231,177,76,.65)}}
+
+  /* ── prompts In[n]: cursor de "escritura" pegado al final de la última línea ── */
+  .slide.active .code .cl:last-child::after{content:"";display:inline-block;width:8px;height:1.05em;
+    margin-left:5px;vertical-align:-2px;background:var(--green);box-shadow:0 0 8px var(--green);
+    animation:runBlink 1.05s steps(1) infinite;animation-delay:.5s;}
+  @keyframes runBlink{50%{opacity:0}}
+
+  @media(prefers-reduced-motion:reduce){
+    .dust{display:none}
+    .plot::after,.note::before,.slide.active .code .cl:last-child::after{animation:none;display:none}
+    .slide.active .plot.big,.slide.active .bars .fill{animation:none}
+    .bars .fill{transform:none}}
+
+  /* ── personaje: bot ASCII que recorre la escena e interactúa ── */
+  .charlayer{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;}
+  .bot{position:absolute;left:0;top:0;
+    transition:left 2.2s cubic-bezier(.45,.05,.3,1), top 2.2s cubic-bezier(.5,.1,.4,1);
+    color:var(--green);}
+  .bot .botart{margin:0;font-family:var(--mono);font-size:16px;line-height:1.02;
+    text-align:center;white-space:pre;letter-spacing:1px;
+    text-shadow:0 0 10px rgba(95,227,138,.75),0 0 24px rgba(95,227,138,.35);}
+  .bot.walk .botart{animation:botBob .42s ease-in-out infinite;}
+  @keyframes botBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  .bot .emote{position:absolute;left:50%;bottom:100%;transform:translate(-50%,4px) scale(.6);
+    font-family:var(--mono);font-size:15px;font-weight:600;color:var(--amber);
+    text-shadow:0 0 10px rgba(231,177,76,.85);opacity:0;transition:.2s;white-space:nowrap;}
+  .bot.emoting .emote{opacity:1;transform:translate(-50%,-2px) scale(1);}
+  .bot .botshadow{position:absolute;left:50%;top:100%;width:30px;height:6px;margin-top:1px;
+    transform:translateX(-50%);border-radius:50%;
+    background:radial-gradient(closest-side,rgba(0,0,0,.5),transparent);}
+  /* si el bot queda pegado al techo, el globo aparece debajo en vez de arriba */
+  .bot.below .emote{top:100%;bottom:auto;transform:translate(-50%,-4px) scale(.6);}
+  .bot.below.emoting .emote{transform:translate(-50%,2px) scale(1);}
+  /* tecla b: ocultar/mostrar el personaje */
+  .charlayer.off{display:none;}
+  body.fs .bot .botart{font-size:clamp(16px,1.35vw,24px);}
+  @media(prefers-reduced-motion:reduce){.charlayer{display:none}}
+
   /* ── pantalla completa: escalar todo con el viewport ── */
   body.fs .app{grid-template-columns:clamp(248px,15vw,360px) 1fr;
     grid-template-rows:clamp(38px,3.8vh,54px) 1fr clamp(26px,2.8vh,40px);}
@@ -252,7 +337,6 @@
     <div class="tab"><span class="dot"></span>analisis.ipynb<span class="x">✕</span></div>
     <div class="meta">
       <span class="hideS">~/icd-2026/tp-final</span>
-      <span class="kernel"><i></i>Python 3.9</span>
       <span class="navbtns">
         <button id="fs" aria-label="pantalla completa" title="pantalla completa · F">⛶</button>
         <button id="prev" aria-label="anterior">◂</button>
@@ -267,9 +351,17 @@
   </nav>
 
   <main class="main" id="main">
+    <div class="progress" id="progress" aria-hidden="true"></div>
+    <div class="dust" id="dust" aria-hidden="true"></div>
+    <div class="charlayer" id="charlayer" aria-hidden="true">
+      <div class="bot" id="bot">
+        <span class="emote" id="emote"></span>
+        <pre class="botart" id="botart"></pre>
+        <span class="botshadow"></span>
+      </div>
+    </div>
     <section class="slide active" id="s0"><div class="wrap">
       <div class="shell-line stream"><span class="u">student@icd-2026</span>:<span class="p">~/tp-final</span>$ jupyter notebook analisis.ipynb</div>
-      <div class="boot stream"><span class="ok">[I]</span> Kernel iniciado · <span class="ok">[I]</span> 1470 registros cargados · matplotlib inline</div>
       <h1 class="title stream">R<span class="o">O</span>TACIÓN<br>DE PERS<span class="o">O</span>NAL<span class="caret"></span></h1>
       <p class="sub stream">Predecir qué empleados <em>dejan la empresa</em> con un modelo de clasificación, sobre el dataset IBM&nbsp;HR&nbsp;Analytics.</p>
       <div class="metablock stream">
@@ -277,9 +369,6 @@
         <div><span class="key">      materia</span> = <span class="s">"Introducción a Ciencia de Datos"</span></div>
         <div><span class="key">        fecha</span> = <span class="s">"Junio 2026"</span></div>
         <div><span class="key">      dataset</span> = <span class="s">"IBM HR Analytics"</span>  <span class="c"># 1470 × 35</span></div>
-      </div>
-      <div class="tags stream">
-        <span class="tag on">clasificación supervisada</span><span class="tag">scikit-learn</span><span class="tag">pandas · seaborn</span>
       </div>
     </div></section>
 
@@ -452,21 +541,14 @@ RandomForest  <span class="lo">5 / 47</span></div></div>
       <p class="md lead stream">La <em>Regresión Logística</em> fue mejor en todas las métricas, y sobre todo en el <strong>recall</strong> de la clase Yes, que es la que importa para anticipar renuncias.</p>
       <div class="bits-forest stream" id="forest" aria-hidden="true"></div>
       <div class="forest-cap stream">1 árbol de decisión &nbsp;→&nbsp; N árboles que votan&nbsp;=&nbsp;<b>Random&nbsp;Forest</b></div>
-      <div class="grid2" style="margin-top:18px">
-        <div class="stream">
-          <div class="out" style="margin-bottom:12px"><div class="ttable"><span class="hd"># de los 47 que se fueron, detectó:</span>
-LogReg        <span class="win">16 / 47</span>
-RandomForest  <span class="lo">5 / 47</span></div></div>
-          <p class="md">Ningún modelo los detecta perfecto: hay pocos casos <em>Yes</em> (desbalance). Sirve como <strong>primera aproximación</strong> para señalar empleados en riesgo.</p>
-        </div>
-        <div class="stream">
-          <p class="md" style="margin-bottom:8px"><strong>Hecho con criterio:</strong></p>
-          <ul class="todo">
-            <li>validé los datos: 0 duplicados, edades 18–60, categorías OK</li>
-            <li>imputé con la mediana del <em>train</em>, sin filtrar el test</li>
-            <li>split estratificado + random_state fijo → reproducible</li>
-          </ul>
-        </div>
+      <p class="md stream" style="margin-top:22px">Ningún modelo detecta las renuncias a la perfección: hay pocos casos <em>Yes</em> (desbalance de clases). Aun así, sirve como <strong>primera aproximación</strong> para señalar empleados en riesgo y decidir dónde mirar.</p>
+      <div class="metablock stream">
+        <div><span class="key">modelo_elegido</span> = <span class="s">"Regresión Logística"</span></div>
+        <div><span class="key"> métrica_clave</span> = <span class="s">"recall de Yes"</span>  <span class="c"># a quién logramos detectar</span></div>
+        <div><span class="key">       dataset</span> = <span class="s">"IBM HR Analytics"</span>  <span class="c"># 1470 × 35 · 2 modelos</span></div>
+      </div>
+      <div class="shell-line stream" style="margin:24px 0 0">
+        <span class="u">student@icd-2026</span>:<span class="p">~/tp-final</span>$ <span class="caret"></span>
       </div>
     </div></section>
   </main>
@@ -476,19 +558,23 @@ RandomForest  <span class="lo">5 / 47</span></div></div>
     <span class="seg file">analisis.ipynb</span>
     <span class="seg hideS">clasificación · sklearn</span>
     <span class="spacer"></span>
+    <span class="seg speaker" id="speaker"><i></i></span>
     <span class="seg hideS">utf-8</span>
     <span class="seg hideS">py 3.9</span>
     <span class="seg pos">CELL <span id="pos">01</span>/12</span>
   </div>
 </div>
 
-<div class="hint" id="hint">← → para navegar</div>
+<div class="hint" id="hint">← → navegar · f pantalla · b bot</div>
 
 <script>
   const slides = Array.from(document.querySelectorAll('.slide'));
   const titles = ['inicio','problema y datos','distribución','salario','edad','horas extra','correlaciones','preparación y modelos','comparación','confusión','importancia','conclusión'];
+  const speakers = ['pedro','pedro','pedro','pedro','pedro','pedro','enzo','enzo','enzo','enzo','pedro','enzo'];
   let cur = 0;
   const pos = document.getElementById('pos');
+  const speaker = document.getElementById('speaker');
+  const progress = document.getElementById('progress');
   const outline = document.getElementById('outline');
 
   titles.forEach((t,i)=>{
@@ -513,6 +599,8 @@ RandomForest  <span class="lo">5 / 47</span></div></div>
     obtns[cur].classList.add('on');
     obtns[cur].scrollIntoView({block:'nearest'});
     pos.textContent=String(i+1).padStart(2,'0');
+    speaker.classList.toggle('enzo',speakers[i]==='enzo');
+    progress.style.width=((i+1)/slides.length*100).toFixed(1)+'%';
   }
   document.getElementById('next').onclick=()=>go(cur+1);
   document.getElementById('prev').onclick=()=>go(cur-1);
@@ -534,6 +622,7 @@ RandomForest  <span class="lo">5 / 47</span></div></div>
     else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
     else if(e.key==='Home'){go(0);} else if(e.key==='End'){go(slides.length-1);}
     else if(e.key==='f'||e.key==='F'){e.preventDefault();toggleFS();}
+    else if(e.key==='b'||e.key==='B'){document.getElementById('charlayer').classList.toggle('off');}
   });
 
   // bosque estilo bits: 1 árbol → N árboles (Random Forest)
@@ -550,8 +639,104 @@ RandomForest  <span class="lo">5 / 47</span></div></div>
       forest.appendChild(t);
     }
   }
+  // ── personaje: bot ASCII que patrulla la slide activa e interactúa con sus elementos ──
+  (function(){
+    const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    const bot=document.getElementById('bot');
+    const art=document.getElementById('botart');
+    const emo=document.getElementById('emote');
+    const mainEl=document.getElementById('main');
+    if(reduce||!bot) return;
+
+    const FACE={happy:'[^_^]',blink:'[-_-]',focus:'[o_o]',wow:'[O_O]'};
+    const LEGS=['/\\','\\/'];
+    let face='happy', leg=0, blinkOff=false, walking=false, legTimer=null, hop=null, idx=0, targets=[];
+    const render=()=>{ art.textContent=(blinkOff?FACE.blink:FACE[face])+'\n '+LEGS[leg]; };
+    render();
+
+    setInterval(()=>{ if(face==='happy' && !walking){ blinkOff=true; render(); setTimeout(()=>{blinkOff=false;render();},150);} }, 3000+Math.random()*1800);
+
+    const startWalk=()=>{ if(walking)return; walking=true; bot.classList.add('walk'); legTimer=setInterval(()=>{leg^=1;render();},150); };
+    const stopWalk=()=>{ walking=false; bot.classList.remove('walk'); clearInterval(legTimer); leg=0; render(); };
+    const emote=(t)=>{ emo.textContent=t; bot.classList.add('emoting'); setTimeout(()=>bot.classList.remove('emoting'),1700); };
+
+    const EMOTE=[['.code','>_'],['.bars','^'],['.plot','->'],['.note','!'],['.ttable','...'],['h2.head','~'],['.metablock','*']];
+    const pickEmote=(el)=>{ for(const [s,e] of EMOTE){ if(el.closest(s)) return e; } return '?'; };
+
+    const refresh=()=>{
+      const slide=document.querySelector('.slide.active');
+      targets = slide ? Array.from(slide.querySelectorAll('.code,.plot,.bars,.note,.ttable,h2.head,.metablock'))
+        .filter(el=>el.offsetWidth>0 && el.offsetHeight>0) : [];
+    };
+    const place=(x,y)=>{ bot.style.left=Math.round(x)+'px'; bot.style.top=Math.round(y)+'px'; };
+
+    function step(){
+      refresh();
+      const mr=mainEl.getBoundingClientRect();
+      const w=bot.offsetWidth||46, h=bot.offsetHeight||40, pad=10;
+      // se mueve por el hueco lateral del contenido (.wrap), nunca encima del texto
+      const slide=document.querySelector('.slide.active');
+      const wrapEl=slide&&slide.querySelector('.wrap');
+      const wr=wrapEl?wrapEl.getBoundingClientRect():mr;
+      const leftLaneX=wr.left-mr.left-w-8;     // x en el carril izquierdo
+      const rightLaneX=wr.right-mr.left+8;     // x en el carril derecho
+      const leftFits=leftLaneX>=pad, rightFits=rightLaneX<=mr.width-w-pad;
+      let x,y,target=null;
+      if(targets.length && (leftFits||rightFits)){
+        target=targets[idx%targets.length]; idx++;
+        const r=target.getBoundingClientRect();
+        const leftRoom=leftLaneX-pad, rightRoom=(mr.width-w-pad)-rightLaneX;
+        x = (rightFits && (!leftFits || rightRoom>=leftRoom)) ? rightLaneX : Math.max(pad,leftLaneX);
+        y = Math.max(pad,Math.min(r.top-mr.top+r.height/2-h/2, mr.height-h-pad));
+      } else {
+        // pantalla angosta sin huecos: patrulla la franja inferior, sin tapar
+        x = pad+Math.random()*(mr.width-w-2*pad);
+        y = mr.height-h-pad;
+      }
+      bot.classList.toggle('below', y<34);     // si está pegado al techo, el globo va abajo
+      face='happy'; render(); startWalk(); place(x,y);
+      clearTimeout(hop);
+      hop=setTimeout(()=>{
+        stopWalk();
+        face=Math.random()<0.5?'focus':'wow'; render();
+        if(target) emote(pickEmote(target));
+        hop=setTimeout(()=>{ face='happy'; render(); step(); }, 1900+Math.random()*1000);
+      }, 2300);
+    }
+
+    // arranca abajo-izquierda y empieza a patrullar
+    setTimeout(()=>{
+      const mr=mainEl.getBoundingClientRect();
+      place(mr.width*0.12, mr.height-(bot.offsetHeight||40)-26);
+      hop=setTimeout(step,900);
+    },600);
+
+    // al cambiar de slide, reinicia el recorrido sobre los nuevos elementos
+    const mo=new MutationObserver(muts=>{
+      for(const m of muts){ if(m.target.classList && m.target.classList.contains('active')){
+        idx=0; clearTimeout(hop); face='happy'; stopWalk(); hop=setTimeout(step,700); break; } }
+    });
+    document.querySelectorAll('.slide').forEach(s=>mo.observe(s,{attributes:true,attributeFilter:['class']}));
+  })();
+
   let tx=0;
   const main=document.getElementById('main');
+
+  // ambiente: motas de datos que suben lento de fondo
+  const dust=document.getElementById('dust');
+  if(dust && !matchMedia('(prefers-reduced-motion:reduce)').matches){
+    for(let i=0;i<14;i++){
+      const s=document.createElement('span');
+      const dur=(18+Math.random()*16);
+      s.style.left=(Math.random()*100).toFixed(2)+'%';
+      s.style.animationDuration=dur.toFixed(2)+'s';
+      s.style.animationDelay=(-Math.random()*dur).toFixed(2)+'s';
+      const sz=(1.5+Math.random()*2.5).toFixed(1);
+      s.style.width=s.style.height=sz+'px';
+      if(Math.random()<0.18) s.style.background='var(--amber)';
+      dust.appendChild(s);
+    }
+  }
   main.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
   main.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;
     if(Math.abs(dx)>60){dx<0?go(cur+1):go(cur-1);}},{passive:true});
