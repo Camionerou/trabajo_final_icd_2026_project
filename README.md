@@ -13,6 +13,7 @@ clasificacion y uso dos modelos: **Regresion Logistica** y **Random Forest**.
 - `IBM HR Analytics Employee_TF.csv` - dataset (separado por `;`).
 - `figuras/` - graficos que genera el notebook.
 - `requirements.txt` - librerias que uso.
+- `exposicion/` - presentacion de la defensa en HTML (`index.html`, se abre en el navegador) con sus `figuras/`.
 
 ## Como correrlo
 
