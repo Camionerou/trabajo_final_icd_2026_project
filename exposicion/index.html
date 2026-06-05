@@ -302,23 +302,65 @@
   /* ── personaje: bot ASCII que recorre la escena e interactúa ── */
   .charlayer{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;}
   .bot{position:absolute;left:0;top:0;
-    transition:left 2.2s cubic-bezier(.45,.05,.3,1), top 2.2s cubic-bezier(.5,.1,.4,1);
-    color:var(--green);}
+    transition:left 1.6s cubic-bezier(.34,.02,.24,1), top 1.6s cubic-bezier(.4,.05,.3,1);
+    color:var(--green);will-change:left,top;
+    pointer-events:auto;cursor:grab;touch-action:none;}
+  /* área de agarre invisible más amplia (no afecta el layout) */
+  .bot::before{content:'';position:absolute;inset:-14px;border-radius:14px;}
+  .bot.dragging{cursor:grabbing;transition:none;z-index:5;}
+  .bot.dragging .botart{animation:none;transform:rotate(-6deg);}
+  /* sacudida al recibir un toque ("¡ay!") */
+  .bot.shake .botart{animation:botShake .5s ease-in-out 1;}
+  @keyframes botShake{0%,100%{transform:translateX(0) rotate(0)}
+    15%{transform:translateX(-4px) rotate(-7deg)}
+    30%{transform:translateX(4px) rotate(7deg)}
+    45%{transform:translateX(-3px) rotate(-5deg)}
+    62%{transform:translateX(3px) rotate(5deg)}
+    80%{transform:translateX(-1px) rotate(-2deg)}}
   .bot .botart{margin:0;font-family:var(--mono);font-size:16px;line-height:1.02;
-    text-align:center;white-space:pre;letter-spacing:1px;
+    text-align:center;white-space:pre;letter-spacing:1px;transform-origin:50% 90%;
     text-shadow:0 0 10px rgba(95,227,138,.75),0 0 24px rgba(95,227,138,.35);}
-  .bot.walk .botart{animation:botBob .42s ease-in-out infinite;}
-  @keyframes botBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-  .bot .emote{position:absolute;left:50%;bottom:100%;transform:translate(-50%,4px) scale(.6);
-    font-family:var(--mono);font-size:15px;font-weight:600;color:var(--amber);
-    text-shadow:0 0 10px rgba(231,177,76,.85);opacity:0;transition:.2s;white-space:nowrap;}
-  .bot.emoting .emote{opacity:1;transform:translate(-50%,-2px) scale(1);}
+  /* caminar: rebote con leve balanceo, como dando pasos */
+  .bot.walk .botart{animation:botBob .36s ease-in-out infinite;}
+  @keyframes botBob{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(-3.5px) rotate(2.5deg)}}
+  /* quieto: respira / se mece suave */
+  .bot.idle .botart{animation:botSway 2.8s ease-in-out infinite;}
+  @keyframes botSway{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-1.5px) rotate(1.2deg)}}
+  /* salto de emoción al llegar a una figura (squash & stretch) */
+  .bot.hop .botart{animation:botHop .55s cubic-bezier(.3,1.5,.5,1) 1;}
+  @keyframes botHop{0%{transform:translateY(0) scale(1,1)}
+    25%{transform:translateY(-13px) scale(.9,1.12)}
+    55%{transform:translateY(0) scale(1.12,.88)}
+    75%{transform:translateY(-4px) scale(.98,1.02)}
+    100%{transform:translateY(0) scale(1,1)}}
+  /* asentir al concentrarse (código/tablas) */
+  .bot.nod .botart{animation:botNod .42s ease-in-out 2;}
+  @keyframes botNod{0%,100%{transform:translateY(0)}45%{transform:translateY(3.5px) rotate(0deg)}}
+  /* saludar con los brazos en alto */
+  .bot.wave .botart{animation:botWave .34s ease-in-out 3;}
+  @keyframes botWave{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+  /* giro de celebración (slide final) */
+  .bot.spin .botart{animation:botSpin .7s cubic-bezier(.4,.1,.3,1) 1;}
+  @keyframes botSpin{0%{transform:scale(1)}50%{transform:translateY(-8px) scale(1.1)}100%{transform:rotate(360deg)}}
+  /* aburrido: se ladea lento, como esperando sin nada que hacer */
+  .bot.bored .botart{animation:botBored 3.4s ease-in-out infinite;}
+  @keyframes botBored{0%,100%{transform:translateY(0) rotate(-4deg)}
+    30%{transform:translateY(1.5px) rotate(-4deg)}
+    50%{transform:translateY(1.5px) rotate(4deg)}
+    80%{transform:translateY(0) rotate(4deg)}}
+  .bot .emote{position:absolute;left:50%;bottom:100%;transform:translate(-50%,4px) scale(.5);
+    font-family:var(--mono);font-size:14px;font-weight:600;color:var(--amber);
+    text-shadow:0 0 10px rgba(231,177,76,.85);opacity:0;
+    transition:transform .26s cubic-bezier(.3,1.5,.5,1),opacity .2s;white-space:nowrap;
+    background:rgba(20,24,28,.72);border:1px solid rgba(231,177,76,.35);
+    border-radius:9px;padding:1px 7px;}
+  .bot.emoting .emote{opacity:1;transform:translate(-50%,-5px) scale(1);}
   .bot .botshadow{position:absolute;left:50%;top:100%;width:30px;height:6px;margin-top:1px;
     transform:translateX(-50%);border-radius:50%;
     background:radial-gradient(closest-side,rgba(0,0,0,.5),transparent);}
   /* si el bot queda pegado al techo, el globo aparece debajo en vez de arriba */
-  .bot.below .emote{top:100%;bottom:auto;transform:translate(-50%,-4px) scale(.6);}
-  .bot.below.emoting .emote{transform:translate(-50%,2px) scale(1);}
+  .bot.below .emote{top:100%;bottom:auto;transform:translate(-50%,-4px) scale(.5);}
+  .bot.below.emoting .emote{transform:translate(-50%,5px) scale(1);}
   /* tecla b: ocultar/mostrar el personaje */
   .charlayer.off{display:none;}
   body.fs .bot .botart{font-size:clamp(16px,1.35vw,24px);}
@@ -681,20 +723,45 @@ F1 Yes          0.44   0.18   <span class="win">0.50</span></div></div>
     const mainEl=document.getElementById('main');
     if(reduce||!bot) return;
 
-    const FACE={happy:'[^_^]',blink:'[-_-]',focus:'[o_o]',wow:'[O_O]'};
+    const FACE={happy:'[^_^]',blink:'[-_-]',focus:'[o_o]',wow:'[O_O]',star:'[*_*]',calm:'[._.]',shy:'[>_<]',bored:'[=_=]',hurt:'[x_x]'};
     const LEGS=['/\\','\\/'];
-    let face='happy', leg=0, blinkOff=false, walking=false, legTimer=null, hop=null, idx=0, targets=[];
-    const render=()=>{ art.textContent=(blinkOff?FACE.blink:FACE[face])+'\n '+LEGS[leg]; };
+    let face='happy', leg=0, blinkOff=false, walking=false, arms='down', legTimer=null, hop=null, idx=0, targets=[];
+    const render=()=>{
+      const f = blinkOff ? FACE.blink : (FACE[face]||FACE.happy);
+      const top = arms==='up' ? ('\\'+f+'/') : f;   // brazos en alto = saludo
+      art.textContent = top+'\n'+LEGS[leg];
+    };
     render();
 
-    setInterval(()=>{ if(face==='happy' && !walking){ blinkOff=true; render(); setTimeout(()=>{blinkOff=false;render();},150);} }, 3000+Math.random()*1800);
+    // parpadeo ocioso (solo cuando está quieto)
+    setInterval(()=>{ if(!walking && !blinkOff && !dragging){ blinkOff=true; render(); setTimeout(()=>{blinkOff=false;render();},140);} }, 2800+Math.random()*2000);
 
-    const startWalk=()=>{ if(walking)return; walking=true; bot.classList.add('walk'); legTimer=setInterval(()=>{leg^=1;render();},150); };
-    const stopWalk=()=>{ walking=false; bot.classList.remove('walk'); clearInterval(legTimer); leg=0; render(); };
+    const clearAnim=()=>bot.classList.remove('walk','hop','nod','wave','spin','idle');
+    const setIdle=()=>{ clearAnim(); bot.classList.add('idle'); };
+    const startWalk=()=>{ if(walking)return; walking=true; arms='down'; clearAnim(); bot.classList.add('walk'); legTimer=setInterval(()=>{leg^=1;render();},140); };
+    const stopWalk=()=>{ walking=false; clearInterval(legTimer); leg=0; setIdle(); render(); };
     const emote=(t)=>{ emo.textContent=t; bot.classList.add('emoting'); setTimeout(()=>bot.classList.remove('emoting'),1700); };
+    // gestos: cada uno deja al bot meciéndose (idle) al terminar
+    const doHop =()=>{ clearAnim(); bot.classList.add('hop');  setTimeout(setIdle,540); };
+    const doNod =()=>{ clearAnim(); bot.classList.add('nod');  setTimeout(setIdle,560); };
+    const doWave=()=>{ arms='up'; render(); clearAnim(); bot.classList.add('wave'); setTimeout(()=>{arms='down';render();setIdle();},1100); };
+    const doSpin=()=>{ clearAnim(); bot.classList.add('spin'); setTimeout(setIdle,720); };
+    // aburrido: se queda ladeándose lento hasta el próximo movimiento (no revierte a idle)
+    const doBored=()=>{ arms='down'; clearAnim(); bot.classList.add('bored'); render(); };
+    const doGesture=(g)=>{ g==='hop'?doHop():g==='nod'?doNod():g==='spin'?doSpin():g==='bored'?doBored():doWave(); };
+    const BORED_EMO=['~','...','zzz','¬¬'];
 
-    const EMOTE=[['.code','>_'],['.bars','^'],['.plot','->'],['.note','!'],['.ttable','...'],['h2.head','~'],['.metablock','*']];
-    const pickEmote=(el)=>{ for(const [s,e] of EMOTE){ if(el.closest(s)) return e; } return '?'; };
+    // reacción según el elemento al que se acerca: cara + globo + gesto
+    const REACT=[
+      ['.plot',     {face:'wow',  emo:'¡wow!', act:'hop'}],
+      ['.bars',     {face:'wow',  emo:'↑↑',    act:'hop'}],
+      ['.code',     {face:'focus',emo:'>_',    act:'nod'}],
+      ['.ttable',   {face:'focus',emo:'...',   act:'nod'}],
+      ['.note',     {face:'star', emo:'¡!',    act:'wave'}],
+      ['.metablock',{face:'happy',emo:'★',     act:'wave'}],
+      ['h2.head',   {face:'calm', emo:'~',     act:'nod'}],
+    ];
+    const reactFor=(el)=>{ for(const [s,r] of REACT){ if(el.closest(s)) return r; } return {face:'happy',emo:'?',act:'wave'}; };
 
     const refresh=()=>{
       const slide=document.querySelector('.slide.active');
@@ -727,29 +794,89 @@ F1 Yes          0.44   0.18   <span class="win">0.50</span></div></div>
         y = mr.height-h-pad;
       }
       bot.classList.toggle('below', y<34);     // si está pegado al techo, el globo va abajo
-      face='happy'; render(); startWalk(); place(x,y);
+      face='happy'; arms='down'; render(); startWalk(); place(x,y);
       clearTimeout(hop);
       hop=setTimeout(()=>{
         stopWalk();
-        face=Math.random()<0.5?'focus':'wow'; render();
-        if(target) emote(pickEmote(target));
-        hop=setTimeout(()=>{ face='happy'; render(); step(); }, 1900+Math.random()*1000);
-      }, 2300);
+        // sin objetivo (slides anchas con foto): se queda aburrido en vez de saludar
+        const r = target ? reactFor(target)
+                         : {face:'bored',emo:BORED_EMO[Math.floor(Math.random()*BORED_EMO.length)],act:'bored'};
+        face=r.face; render();
+        doGesture(r.act);
+        emote(r.emo);
+        hop=setTimeout(()=>{ face='happy'; arms='down'; render(); step(); }, 1900+Math.random()*1000);
+      }, 1700);
     }
 
-    // arranca abajo-izquierda y empieza a patrullar
+    // arranca abajo-izquierda, saluda y empieza a patrullar
     setTimeout(()=>{
       const mr=mainEl.getBoundingClientRect();
       place(mr.width*0.12, mr.height-(bot.offsetHeight||40)-26);
-      hop=setTimeout(step,900);
+      setIdle();
+      hop=setTimeout(()=>{ face='happy'; doWave(); emote('¡hola!'); hop=setTimeout(step,1200); },500);
     },600);
 
     // al cambiar de slide, reinicia el recorrido sobre los nuevos elementos
     const mo=new MutationObserver(muts=>{
       for(const m of muts){ if(m.target.classList && m.target.classList.contains('active')){
-        idx=0; clearTimeout(hop); face='happy'; stopWalk(); hop=setTimeout(step,700); break; } }
+        idx=0; clearTimeout(hop); face='happy'; arms='down'; stopWalk();
+        // en el slide final, festeja con un giro antes de patrullar
+        const last = m.target.id==='s14' || m.target===document.querySelector('.slide:last-of-type');
+        if(last){ face='star'; doSpin(); emote('¡gracias!'); hop=setTimeout(step,1400); }
+        else hop=setTimeout(step,700);
+        break; } }
     });
     document.querySelectorAll('.slide').forEach(s=>mo.observe(s,{attributes:true,attributeFilter:['class']}));
+
+    // ── interacción: un toque le "hace mal"; mantener presionado lo arrastra ──
+    const DRAG_TH=5;                       // px de movimiento para pasar a arrastrar
+    let dragging=false, downX=0, downY=0, grabDX=0, grabDY=0;
+
+    const hurt=()=>{
+      clearTimeout(hop); walking=false; clearInterval(legTimer);
+      face='hurt'; arms='down'; clearAnim(); render();
+      bot.classList.add('shake');
+      emote(['¡ay!','¡ouch!','¡no!','¡eh!'][Math.floor(Math.random()*4)]);
+      setTimeout(()=>{ bot.classList.remove('shake'); face='shy'; render(); }, 520);
+      hop=setTimeout(()=>{ face='happy'; arms='down'; render(); step(); }, 1500);
+    };
+
+    bot.addEventListener('pointerdown', e=>{
+      e.preventDefault();
+      bot.setPointerCapture(e.pointerId);
+      downX=e.clientX; downY=e.clientY; dragging=false;
+      const br=bot.getBoundingClientRect();
+      grabDX=e.clientX-br.left; grabDY=e.clientY-br.top;   // dónde lo agarró dentro del cuerpo
+      clearTimeout(hop); walking=false; clearInterval(legTimer); clearAnim();
+      face='wow'; arms='down'; render();                   // sorprendido al ser tocado
+    });
+
+    bot.addEventListener('pointermove', e=>{
+      if(!bot.hasPointerCapture(e.pointerId)) return;
+      if(!dragging && Math.hypot(e.clientX-downX, e.clientY-downY)>DRAG_TH){
+        dragging=true; bot.classList.add('dragging');
+        face='wow'; render(); emote('¡eh!');
+      }
+      if(dragging){
+        const mr=mainEl.getBoundingClientRect();
+        const w=bot.offsetWidth, h=bot.offsetHeight, pad=2;
+        let x=Math.max(pad, Math.min(e.clientX-mr.left-grabDX, mr.width-w-pad));
+        let y=Math.max(pad, Math.min(e.clientY-mr.top -grabDY, mr.height-h-pad));
+        bot.classList.toggle('below', y<34);
+        place(x,y);
+      }
+    });
+
+    bot.addEventListener('pointerup', e=>{
+      try{ bot.releasePointerCapture(e.pointerId); }catch(_){}
+      if(dragging){
+        dragging=false; bot.classList.remove('dragging');
+        face='shy'; render(); doHop(); emote('¡uf!');       // aterriza con un saltito
+        hop=setTimeout(()=>{ face='happy'; arms='down'; render(); step(); }, 1400);
+      } else {
+        hurt();                                             // toque sin arrastrar = le hiciste mal
+      }
+    });
   })();
 
   let tx=0;
